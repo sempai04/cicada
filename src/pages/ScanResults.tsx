@@ -89,26 +89,111 @@ const ScanResults: React.FC = () => {
     navigate('/scans');
   };
 
+  // Generate PDF report
   const handleDownloadPDF = () => {
+    if (!scan) return;
+    
     toast.success("Generating PDF report", {
       description: "Your report will be downloaded shortly.",
     });
     
-    // Simulate download delay
+    // Simulate processing delay
     setTimeout(() => {
+      // Create blob content for PDF
+      const reportContent = generateReportContent(scan, 'pdf');
+      
+      // Create a Blob with the data
+      const blob = new Blob([reportContent], { type: 'application/pdf' });
+      
+      // Create a link element, set properties, click it to download, then remove
+      downloadFile(blob, `${scan.name.replace(/\s+/g, '_')}_Report.pdf`);
+      
       toast.success("Report downloaded successfully");
     }, 1500);
   };
 
+  // Generate CSV report
   const handleDownloadCSV = () => {
+    if (!scan) return;
+    
     toast.success("Generating CSV report", {
       description: "Your report will be downloaded shortly.",
     });
     
-    // Simulate download delay
+    // Simulate processing delay
     setTimeout(() => {
+      // Create CSV content
+      const csvContent = generateReportContent(scan, 'csv');
+      
+      // Create a Blob with the data
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      // Create a link element, set properties, click it to download, then remove
+      downloadFile(blob, `${scan.name.replace(/\s+/g, '_')}_Vulnerabilities.csv`);
+      
       toast.success("Report downloaded successfully");
     }, 1500);
+  };
+
+  // Helper function to download a file
+  const downloadFile = (blob: Blob, filename: string) => {
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    // Clean up
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(link.href);
+  };
+
+  // Helper function to generate report content based on type
+  const generateReportContent = (scan: ScanDetail, type: 'pdf' | 'csv'): string => {
+    if (type === 'csv') {
+      // Create CSV header
+      let csv = 'ID,Title,Severity,Host,Port,Service,CVE\n';
+      
+      // Add vulnerabilities data
+      scan.vulnerabilities.forEach(vuln => {
+        csv += `${vuln.id},"${vuln.title}",${vuln.severity},${vuln.host},${vuln.port},${vuln.service},${vuln.cve}\n`;
+      });
+      
+      return csv;
+    } else {
+      // For PDF we're creating a text representation (in a real app this would use a PDF library)
+      let content = `
+SECURITY SCAN REPORT
+====================
+Scan Name: ${scan.name}
+Target: ${scan.target}
+Date: ${scan.date}
+Duration: ${scan.duration}
+Status: ${scan.status}
+Total Findings: ${scan.findings}
+
+VULNERABILITIES SUMMARY
+----------------------
+Critical: ${scan.vulnerabilities.filter(v => v.severity === 'critical').length}
+High: ${scan.vulnerabilities.filter(v => v.severity === 'high').length}
+Medium: ${scan.vulnerabilities.filter(v => v.severity === 'medium').length}
+
+DETAILED FINDINGS
+----------------
+`;
+      
+      scan.vulnerabilities.forEach(vuln => {
+        content += `
+${vuln.title} (${vuln.severity.toUpperCase()})
+Host: ${vuln.host}:${vuln.port} (${vuln.service})
+CVE: ${vuln.cve}
+Description: ${vuln.description}
+Remediation: ${vuln.remediation}
+
+`;
+      });
+      
+      return content;
+    }
   };
 
   if (loading) {

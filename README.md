@@ -1,8 +1,12 @@
-# Welcome to your Lovable project
+# Welcome to Cicada
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/993a5ccc-faa7-47cb-8c6e-d61bcb465d96
+
+## What is Cicada?
+
+Cicada is an open-source automated vulnerability scanner and penetration testing framework designed to help security professionals and developers identify and mitigate potential security risks.
 
 ## How can I edit this code?
 

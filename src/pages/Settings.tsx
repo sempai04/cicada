@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +17,7 @@ const Settings: React.FC = () => {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Configure scanner options and preferences</p>
+        <p className="text-muted-foreground">Configure Cicada scanner options and preferences</p>
       </div>
       
       <Tabs defaultValue="general" className="w-full">
@@ -38,7 +37,7 @@ const Settings: React.FC = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="app-name">Application Name</Label>
-                  <Input id="app-name" defaultValue="VeilScanner" />
+                  <Input id="app-name" defaultValue="Cicada" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="default-target">Default Target</Label>

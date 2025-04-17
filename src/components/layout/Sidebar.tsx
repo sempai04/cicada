@@ -32,7 +32,7 @@ const Sidebar = () => {
       <div className="px-6 mb-8 flex items-center">
         <Shield className="w-8 h-8 text-cyber mr-2" />
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Veil<span className="text-cyber">Scanner</span></h1>
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Cica<span className="text-cyber">da</span></h1>
           <p className="text-xs text-muted-foreground">Penetration Testing Framework</p>
         </div>
       </div>

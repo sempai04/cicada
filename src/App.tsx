@@ -9,6 +9,7 @@ import AppShell from "./components/layout/AppShell";
 import Dashboard from "./pages/Dashboard";
 import Scans from "./pages/Scans";
 import NewScan from "./pages/NewScan";
+import ScanResults from "./pages/ScanResults";
 import Vulnerabilities from "./pages/Vulnerabilities";
 import Reports from "./pages/Reports";
 import Console from "./pages/Console";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/" element={<AppShell><Dashboard /></AppShell>} />
           <Route path="/scans" element={<AppShell><Scans /></AppShell>} />
           <Route path="/scans/new" element={<AppShell><NewScan /></AppShell>} />
+          <Route path="/scans/results/:id" element={<AppShell><ScanResults /></AppShell>} />
           <Route path="/vulnerabilities" element={<AppShell><Vulnerabilities /></AppShell>} />
           <Route path="/reports" element={<AppShell><Reports /></AppShell>} />
           <Route path="/console" element={<AppShell><Console /></AppShell>} />

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Play, Pause, Trash2, Download, CheckCircle } from 'lucide-react';
+import { Plus, Play, Pause, Trash2, Download, CheckCircle, Eye } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -138,6 +138,21 @@ const Scans: React.FC = () => {
       description: "The scheduled scan has been removed.",
     });
   };
+
+  const viewScanResults = (id: string) => {
+    navigate(`/scans/results/${id}`);
+  };
+
+  const downloadScanReport = (id: string, scanName: string) => {
+    toast.success(`Downloading report for "${scanName}"`, {
+      description: "Your report will be downloaded shortly",
+    });
+    
+    // Simulate download delay
+    setTimeout(() => {
+      toast.success("Report downloaded successfully");
+    }, 1500);
+  };
   
   return (
     <div className="space-y-8">
@@ -260,7 +275,7 @@ const Scans: React.FC = () => {
               <h3 className="text-lg font-medium">Scan History</h3>
               <Button size="sm" variant="outline">
                 <Download className="h-4 w-4 mr-2" />
-                Export
+                Export All
               </Button>
             </div>
             <div>
@@ -289,10 +304,19 @@ const Scans: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => viewScanResults(scan.id)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
                             View Results
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => downloadScanReport(scan.id, scan.name)}
+                          >
                             <Download className="h-4 w-4" />
                           </Button>
                         </div>

@@ -14,6 +14,7 @@ import Vulnerabilities from "./pages/Vulnerabilities";
 import Reports from "./pages/Reports";
 import Console from "./pages/Console";
 import Settings from "./pages/Settings";
+import TargetManager from "./pages/TargetManager";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/vulnerabilities" element={<AppShell><Vulnerabilities /></AppShell>} />
           <Route path="/reports" element={<AppShell><Reports /></AppShell>} />
           <Route path="/console" element={<AppShell><Console /></AppShell>} />
+          <Route path="/targets" element={<AppShell><TargetManager /></AppShell>} />
           <Route path="/settings" element={<AppShell><Settings /></AppShell>} />
           <Route path="*" element={<NotFound />} />
         </Routes>

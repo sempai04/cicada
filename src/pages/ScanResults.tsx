@@ -1,24 +1,11 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Download, FileText } from 'lucide-react';
-import VulnerabilityTable, { Vulnerability } from '@/components/vulnerabilities/VulnerabilityTable';
-import { toast } from 'sonner';
-
-interface ScanDetail {
-  id: string;
-  name: string;
-  target: string;
-  date: string;
-  duration: string;
-  findings: number;
-  status: string;
-  vulnerabilities: Vulnerability[];
-}
+import { Card, CardContent } from '@/components/ui/card';
+import VulnerabilityTable from '@/components/vulnerabilities/VulnerabilityTable';
+import ScanHeader from '@/components/scans/ScanHeader';
+import ScanReportActions from '@/components/scans/ScanReportActions';
+import ScanSummary from '@/components/scans/ScanSummary';
+import type { ScanDetail } from '@/types/scan';
 
 const ScanResults: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -89,123 +76,10 @@ const ScanResults: React.FC = () => {
     navigate('/scans');
   };
 
-  // Generate PDF report
-  const handleDownloadPDF = () => {
-    if (!scan) return;
-    
-    toast.success("Generating PDF report", {
-      description: "Your report will be downloaded shortly.",
-    });
-    
-    // Simulate processing delay
-    setTimeout(() => {
-      // Create blob content for PDF
-      const reportContent = generateReportContent(scan, 'pdf');
-      
-      // Create a Blob with the data
-      const blob = new Blob([reportContent], { type: 'application/pdf' });
-      
-      // Create a link element, set properties, click it to download, then remove
-      downloadFile(blob, `${scan.name.replace(/\s+/g, '_')}_Report.pdf`);
-      
-      toast.success("Report downloaded successfully");
-    }, 1500);
-  };
-
-  // Generate CSV report
-  const handleDownloadCSV = () => {
-    if (!scan) return;
-    
-    toast.success("Generating CSV report", {
-      description: "Your report will be downloaded shortly.",
-    });
-    
-    // Simulate processing delay
-    setTimeout(() => {
-      // Create CSV content
-      const csvContent = generateReportContent(scan, 'csv');
-      
-      // Create a Blob with the data
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      
-      // Create a link element, set properties, click it to download, then remove
-      downloadFile(blob, `${scan.name.replace(/\s+/g, '_')}_Vulnerabilities.csv`);
-      
-      toast.success("Report downloaded successfully");
-    }, 1500);
-  };
-
-  // Helper function to download a file
-  const downloadFile = (blob: Blob, filename: string) => {
-    const link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    // Clean up
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(link.href);
-  };
-
-  // Helper function to generate report content based on type
-  const generateReportContent = (scan: ScanDetail, type: 'pdf' | 'csv'): string => {
-    if (type === 'csv') {
-      // Create CSV header
-      let csv = 'ID,Title,Severity,Host,Port,Service,CVE\n';
-      
-      // Add vulnerabilities data
-      scan.vulnerabilities.forEach(vuln => {
-        csv += `${vuln.id},"${vuln.title}",${vuln.severity},${vuln.host},${vuln.port},${vuln.service},${vuln.cve}\n`;
-      });
-      
-      return csv;
-    } else {
-      // For PDF we're creating a text representation (in a real app this would use a PDF library)
-      let content = `
-SECURITY SCAN REPORT
-====================
-Scan Name: ${scan.name}
-Target: ${scan.target}
-Date: ${scan.date}
-Duration: ${scan.duration}
-Status: ${scan.status}
-Total Findings: ${scan.findings}
-
-VULNERABILITIES SUMMARY
-----------------------
-Critical: ${scan.vulnerabilities.filter(v => v.severity === 'critical').length}
-High: ${scan.vulnerabilities.filter(v => v.severity === 'high').length}
-Medium: ${scan.vulnerabilities.filter(v => v.severity === 'medium').length}
-
-DETAILED FINDINGS
-----------------
-`;
-      
-      scan.vulnerabilities.forEach(vuln => {
-        content += `
-${vuln.title} (${vuln.severity.toUpperCase()})
-Host: ${vuln.host}:${vuln.port} (${vuln.service})
-CVE: ${vuln.cve}
-Description: ${vuln.description}
-Remediation: ${vuln.remediation}
-
-`;
-      });
-      
-      return content;
-    }
-  };
-
   if (loading) {
     return (
       <div className="space-y-8">
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" onClick={handleBack}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Scans
-          </Button>
-          <h1 className="text-2xl font-bold">Loading Scan Results...</h1>
-        </div>
+        <ScanHeader name="Loading Scan Results..." date="" onBack={handleBack} />
       </div>
     );
   }
@@ -213,13 +87,7 @@ Remediation: ${vuln.remediation}
   if (!scan) {
     return (
       <div className="space-y-8">
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" onClick={handleBack}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Scans
-          </Button>
-          <h1 className="text-2xl font-bold">Scan Not Found</h1>
-        </div>
+        <ScanHeader name="Scan Not Found" date="" onBack={handleBack} />
         <Card>
           <CardContent className="p-6">
             <p>The requested scan could not be found. It may have been deleted or you may not have access to it.</p>
@@ -231,84 +99,12 @@ Remediation: ${vuln.remediation}
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center space-y-4 sm:space-y-0">
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" onClick={handleBack}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{scan.name}</h1>
-            <p className="text-muted-foreground">Scan results from {scan.date}</p>
-          </div>
-        </div>
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={handleDownloadCSV}>
-            <Download className="mr-2 h-4 w-4" />
-            CSV
-          </Button>
-          <Button 
-            className="bg-cyber hover:bg-cyber-accent text-black"
-            onClick={handleDownloadPDF}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            PDF Report
-          </Button>
-        </div>
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <ScanHeader name={scan.name} date={scan.date} onBack={handleBack} />
+        <ScanReportActions scan={scan} />
       </div>
 
-      <Card className="border border-border/50">
-        <CardHeader className="pb-2">
-          <CardTitle>Scan Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Target</h3>
-              <p className="mt-1">{scan.target}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Duration</h3>
-              <p className="mt-1">{scan.duration}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
-              <Badge 
-                variant="outline" 
-                className="mt-1 border-cyber-success text-cyber-success"
-              >
-                {scan.status}
-              </Badge>
-            </div>
-          </div>
-          <Separator className="my-6" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center p-4 bg-muted/20 rounded-md">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">Critical</p>
-              <h3 className="text-2xl font-bold text-cyber-error mt-1">
-                {scan.vulnerabilities.filter(v => v.severity === 'critical').length}
-              </h3>
-            </div>
-            <div className="text-center p-4 bg-muted/20 rounded-md">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">High</p>
-              <h3 className="text-2xl font-bold text-cyber-error mt-1">
-                {scan.vulnerabilities.filter(v => v.severity === 'high').length}
-              </h3>
-            </div>
-            <div className="text-center p-4 bg-muted/20 rounded-md">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">Medium</p>
-              <h3 className="text-2xl font-bold text-cyber-warning mt-1">
-                {scan.vulnerabilities.filter(v => v.severity === 'medium').length}
-              </h3>
-            </div>
-            <div className="text-center p-4 bg-muted/20 rounded-md">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">Total</p>
-              <h3 className="text-2xl font-bold mt-1">{scan.findings}</h3>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
+      <ScanSummary scan={scan} />
       <VulnerabilityTable vulnerabilities={scan.vulnerabilities} />
     </div>
   );

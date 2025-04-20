@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface Scan {
   id: string;
@@ -19,6 +20,12 @@ interface RecentScansProps {
 }
 
 const RecentScans: React.FC<RecentScansProps> = ({ scans }) => {
+  const navigate = useNavigate();
+  
+  const handleViewAll = () => {
+    navigate('/scans');
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -50,7 +57,12 @@ const RecentScans: React.FC<RecentScansProps> = ({ scans }) => {
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg">Recent Scans</CardTitle>
-          <Button variant="outline" size="sm" className="text-xs h-8">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs h-8" 
+            onClick={handleViewAll}
+          >
             View All
           </Button>
         </div>

@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -18,6 +17,24 @@ import {
   BarChart2,
   Eye
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 interface Report {
   id: string;
@@ -29,6 +46,10 @@ interface Report {
 }
 
 const Reports: React.FC = () => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [reportType, setReportType] = useState<string>("");
+  const [reportTemplate, setReportTemplate] = useState<string>("");
+  
   // Mock reports data
   const reports: Report[] = [
     {
@@ -99,6 +120,29 @@ const Reports: React.FC = () => {
     }
   };
   
+  const handleGenerateReport = () => {
+    if (!reportType || !reportTemplate) {
+      toast.error("Please select both report type and template");
+      return;
+    }
+    
+    setIsGenerating(true);
+    
+    // Add a new report to the list (in a real app, this would be an API call)
+    toast.success("Generating report", {
+      description: "Your report is being generated and will be ready shortly."
+    });
+    
+    // Simulate API delay
+    setTimeout(() => {
+      setIsGenerating(false);
+      toast.success("Report generated successfully");
+      
+      // In a real app, this would redirect to the new report or refresh the list
+      // For now, we'll just close the dialog
+    }, 2000);
+  };
+  
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between md:items-center space-y-4 md:space-y-0">
@@ -107,12 +151,72 @@ const Reports: React.FC = () => {
           <p className="text-muted-foreground">Generate and manage security reports</p>
         </div>
         <div className="flex space-x-2">
-          <Button
-            className="bg-cyber hover:bg-cyber-accent text-black"
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Generate Report
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                className="bg-cyber hover:bg-cyber-accent text-black"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Generate Report
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Generate New Report</DialogTitle>
+                <DialogDescription>
+                  Configure and generate a security report
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="reportType" className="text-right">
+                    Type
+                  </Label>
+                  <Select
+                    value={reportType}
+                    onValueChange={setReportType}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select report type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="vuln">Vulnerability</SelectItem>
+                      <SelectItem value="compliance">Compliance</SelectItem>
+                      <SelectItem value="executive">Executive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="template" className="text-right">
+                    Template
+                  </Label>
+                  <Select
+                    value={reportTemplate}
+                    onValueChange={setReportTemplate}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="executive">Executive Summary</SelectItem>
+                      <SelectItem value="technical">Technical Detail Report</SelectItem>
+                      <SelectItem value="compliance">Compliance Audit</SelectItem>
+                      <SelectItem value="weekly">Weekly Status</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  onClick={handleGenerateReport} 
+                  disabled={isGenerating}
+                  className="bg-cyber hover:bg-cyber-accent text-black"
+                >
+                  {isGenerating ? "Generating..." : "Generate Report"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       

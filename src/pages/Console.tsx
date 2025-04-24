@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, AlarmClock, Download } from 'lucide-react';
+import { Send, AlarmClock, Download, Terminal, Trash2, InfoIcon, Copy } from 'lucide-react';
 import TerminalOutput from '@/components/terminal/TerminalOutput';
+import { toast } from 'sonner';
 
 const Console: React.FC = () => {
   const [command, setCommand] = useState('');
@@ -15,30 +16,81 @@ const Console: React.FC = () => {
     'Vulnerability database loaded (last updated: 2025-04-15)',
     'Type "help" for available commands',
   ]);
+  
+  const inputRef = useRef<HTMLInputElement>(null);
+  const commandHistoryRef = useRef<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  
+  // Focus the input when the component mounts
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleClearConsole = () => {
+    setHistory(['Console cleared.']);
+    toast.success('Console cleared');
+  };
+
+  const handleCopyOutput = () => {
+    const textToCopy = history.join('\n');
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => toast.success('Console output copied to clipboard'))
+      .catch(() => toast.error('Failed to copy to clipboard'));
+  };
+
+  const handleSaveOutput = () => {
+    const textToSave = history.join('\n');
+    const blob = new Blob([textToSave], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
     
-    if (!command.trim()) return;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'console-output.txt';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     
-    setHistory(prev => [...prev, `> ${command}`]);
+    URL.revokeObjectURL(url);
+    toast.success('Console output saved to file');
+  };
+
+  const executeCommand = (cmd: string) => {
+    // Save command to history stack for up/down arrow navigation
+    if (cmd.trim() && (commandHistoryRef.current.length === 0 || commandHistoryRef.current[0] !== cmd)) {
+      commandHistoryRef.current = [cmd, ...commandHistoryRef.current];
+    }
+    setHistoryIndex(-1);
     
     // Simple command processing logic
-    switch (command.toLowerCase()) {
+    const cmdLower = cmd.toLowerCase().trim();
+    const cmdParts = cmdLower.split(' ');
+    const baseCmd = cmdParts[0];
+    
+    switch (baseCmd) {
       case 'help':
         setHistory(prev => [
           ...prev,
           'Available commands:',
           '  help - Show this help menu',
           '  scan <target> - Run a quick scan on target',
+          '    Options:',
+          '      -p <ports> - Specify ports (e.g., scan 192.168.1.1 -p 80,443)',
+          '      -sV - Version detection',
+          '      -O - OS detection',
+          '      -A - Aggressive scan mode',
           '  clear - Clear console output',
           '  status - Show current scanner status',
+          '  info - Show system information',
           '  exit - Exit console mode'
         ]);
         break;
+        
       case 'clear':
-        setHistory(['Console cleared.']);
+        handleClearConsole();
         break;
+        
       case 'status':
         setHistory(prev => [
           ...prev,
@@ -50,31 +102,107 @@ const Console: React.FC = () => {
           '  Vulnerability DB: Up to date'
         ]);
         break;
-      case 'exit':
-        setHistory(prev => [...prev, 'Cannot exit in web interface mode.']);
+        
+      case 'info':
+        setHistory(prev => [
+          ...prev,
+          'System Information:',
+          '  VeilScanner v1.0.0',
+          '  Web Interface Mode',
+          '  Network: Connected',
+          '  Latest update: 2025-04-20',
+          '  License: Enterprise (Valid until 2026-04-24)'
+        ]);
         break;
-      default:
-        if (command.toLowerCase().startsWith('scan')) {
-          const target = command.split(' ')[1];
-          if (target) {
+        
+      case 'exit':
+        setHistory(prev => [
+          ...prev,
+          'Exiting console mode...',
+          'Notice: In web interface mode, console session remains active.'
+        ]);
+        toast({
+          title: 'Console Exit',
+          description: 'Cannot fully exit in web interface mode.',
+        });
+        break;
+        
+      case 'scan':
+        if (cmdParts.length > 1) {
+          const target = cmdParts[1];
+          let options = '';
+          
+          // Parse options if present
+          if (cmdParts.length > 2) {
+            options = cmdParts.slice(2).join(' ');
+          }
+          
+          setHistory(prev => [
+            ...prev,
+            `Initiating scan on target: ${target} ${options ? `with options: ${options}` : ''}`,
+            'Scanning...',
+          ]);
+          
+          // Simulate async scan with a slight delay
+          setTimeout(() => {
             setHistory(prev => [
               ...prev,
-              `Initiating quick scan on target: ${target}`,
-              'Scanning...',
               'Discovered open ports: 22, 80, 443',
               'Running service detection...',
               'Checking for vulnerabilities...',
-              'Scan complete. Found 3 potential vulnerabilities.'
+              'Scan complete. Found 3 potential vulnerabilities:',
+              ' - CVE-2023-1234: OpenSSH < 9.0 Authentication Bypass (High)',
+              ' - CVE-2024-5678: Apache 2.4.52 Directory Traversal (Medium)',
+              ' - Weak TLS Configuration on port 443 (Medium)'
             ]);
-          } else {
-            setHistory(prev => [...prev, 'Error: No target specified. Usage: scan <target>']);
-          }
+            
+            toast.success('Scan completed', {
+              description: 'Found 3 potential vulnerabilities',
+            });
+          }, 2000);
         } else {
-          setHistory(prev => [...prev, `Command not recognized: ${command}`]);
+          setHistory(prev => [
+            ...prev,
+            'Error: No target specified. Usage: scan <target> [options]',
+            'Example: scan 192.168.1.1 -p 80,443 -sV'
+          ]);
         }
+        break;
+        
+      default:
+        setHistory(prev => [...prev, `Command not recognized: ${cmd}`]);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
+    if (!command.trim()) return;
+    
+    setHistory(prev => [...prev, `> ${command}`]);
+    executeCommand(command);
     setCommand('');
+  };
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Navigate through command history
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const newIndex = Math.min(historyIndex + 1, commandHistoryRef.current.length - 1);
+      setHistoryIndex(newIndex);
+      if (newIndex >= 0 && commandHistoryRef.current[newIndex]) {
+        setCommand(commandHistoryRef.current[newIndex]);
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const newIndex = Math.max(historyIndex - 1, -1);
+      setHistoryIndex(newIndex);
+      if (newIndex >= 0 && commandHistoryRef.current[newIndex]) {
+        setCommand(commandHistoryRef.current[newIndex]);
+      } else {
+        setCommand('');
+      }
+    }
   };
 
   return (
@@ -85,11 +213,15 @@ const Console: React.FC = () => {
           <p className="text-muted-foreground">Command-line interface to the scanner</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline">
-            <AlarmClock className="mr-2 h-4 w-4" />
-            History
+          <Button variant="outline" onClick={handleClearConsole}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Clear
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleCopyOutput}>
+            <Copy className="mr-2 h-4 w-4" />
+            Copy
+          </Button>
+          <Button variant="outline" onClick={handleSaveOutput}>
             <Download className="mr-2 h-4 w-4" />
             Save Output
           </Button>
@@ -98,7 +230,10 @@ const Console: React.FC = () => {
       
       <Card className="border border-border/50">
         <CardHeader className="bg-muted/30 py-3 px-4">
-          <CardTitle className="text-lg">Terminal</CardTitle>
+          <CardTitle className="text-lg flex items-center">
+            <Terminal className="mr-2 h-5 w-5 text-cyber" />
+            Terminal
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="p-2 pb-0">
@@ -108,8 +243,10 @@ const Console: React.FC = () => {
           <form onSubmit={handleSubmit} className="p-2 pt-0">
             <div className="flex mt-2">
               <Input
+                ref={inputRef}
                 value={command}
                 onChange={(e) => setCommand(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Enter command..."
                 className="font-mono border-cyber/50 bg-cyber-darker focus-visible:ring-cyber"
               />

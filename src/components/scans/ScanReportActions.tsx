@@ -2,10 +2,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, FileText } from 'lucide-react';
-import { downloadFile } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ScanDetail } from '@/types/scan';
-import { generateReportContent } from '@/lib/reports';
+import { downloadReport } from '@/lib/reports';
 
 interface ScanReportActionsProps {
   scan: ScanDetail;
@@ -18,11 +17,14 @@ const ScanReportActions: React.FC<ScanReportActionsProps> = ({ scan }) => {
     });
     
     setTimeout(() => {
-      const reportContent = generateReportContent(scan, 'pdf');
-      const blob = new Blob([reportContent], { type: 'application/pdf' });
-      downloadFile(blob, `${scan.name.replace(/\s+/g, '_')}_Report.pdf`);
-      toast.success("Report downloaded successfully");
-    }, 1500);
+      try {
+        downloadReport(scan, 'pdf');
+        toast.success("Report downloaded successfully");
+      } catch (error) {
+        console.error("Error downloading PDF report:", error);
+        toast.error("Failed to download PDF report");
+      }
+    }, 1000);
   };
 
   const handleDownloadCSV = () => {
@@ -31,11 +33,14 @@ const ScanReportActions: React.FC<ScanReportActionsProps> = ({ scan }) => {
     });
     
     setTimeout(() => {
-      const csvContent = generateReportContent(scan, 'csv');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      downloadFile(blob, `${scan.name.replace(/\s+/g, '_')}_Vulnerabilities.csv`);
-      toast.success("Report downloaded successfully");
-    }, 1500);
+      try {
+        downloadReport(scan, 'csv');
+        toast.success("Report downloaded successfully");
+      } catch (error) {
+        console.error("Error downloading CSV report:", error);
+        toast.error("Failed to download CSV report");
+      }
+    }, 1000);
   };
 
   return (

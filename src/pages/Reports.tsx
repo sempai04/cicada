@@ -35,6 +35,8 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { downloadReport } from "@/lib/reports";
+import { ScanDetail } from "@/types/scan";
 
 interface Report {
   id: string;
@@ -43,6 +45,7 @@ interface Report {
   type: 'vuln' | 'compliance' | 'executive';
   status: 'generated' | 'generating';
   size: string;
+  scanData?: ScanDetail;
 }
 
 const Reports: React.FC = () => {
@@ -50,7 +53,40 @@ const Reports: React.FC = () => {
   const [reportType, setReportType] = useState<string>("");
   const [reportTemplate, setReportTemplate] = useState<string>("");
   
-  // Mock reports data
+  const mockScanData: ScanDetail = {
+    id: '123',
+    name: 'Weekly Vulnerability Report',
+    target: '10.0.1.0/24',
+    date: '2025-04-16',
+    duration: '3m 45s',
+    findings: 47,
+    status: 'completed',
+    vulnerabilities: [
+      {
+        id: '1',
+        title: 'SSL/TLS Server Supports TLS 1.0',
+        severity: 'medium',
+        host: '10.0.1.10',
+        port: 443,
+        service: 'https',
+        description: 'The remote service accepts connections encrypted using TLS 1.0. TLS 1.0 has known issues.',
+        remediation: 'Disable TLS 1.0 and configure the service to support only TLS 1.2 or higher.',
+        cve: 'CVE-2011-3389',
+      },
+      {
+        id: '2',
+        title: 'Apache Log4j Remote Code Execution',
+        severity: 'critical',
+        host: '10.0.1.15',
+        port: 8080,
+        service: 'http',
+        description: 'The remote web application uses a vulnerable version of Log4j.',
+        remediation: 'Update Log4j to version 2.15.0 or later.',
+        cve: 'CVE-2021-44228',
+      }
+    ]
+  };
+  
   const reports: Report[] = [
     {
       id: '1',
@@ -59,6 +95,7 @@ const Reports: React.FC = () => {
       type: 'vuln',
       status: 'generated',
       size: '2.3 MB',
+      scanData: mockScanData,
     },
     {
       id: '2',
@@ -67,6 +104,7 @@ const Reports: React.FC = () => {
       type: 'executive',
       status: 'generated',
       size: '1.5 MB',
+      scanData: {...mockScanData, name: 'Executive Summary Q1'},
     },
     {
       id: '3',
@@ -75,6 +113,7 @@ const Reports: React.FC = () => {
       type: 'compliance',
       status: 'generated',
       size: '4.8 MB',
+      scanData: {...mockScanData, name: 'Internal Network Compliance Report'},
     },
     {
       id: '4',
@@ -83,6 +122,7 @@ const Reports: React.FC = () => {
       type: 'vuln',
       status: 'generated',
       size: '3.1 MB',
+      scanData: {...mockScanData, name: 'Web Application Scan Report'},
     },
     {
       id: '5',
@@ -128,12 +168,10 @@ const Reports: React.FC = () => {
     
     setIsGenerating(true);
     
-    // Add a new report to the list (in a real app, this would be an API call)
     toast.success("Generating report", {
       description: "Your report is being generated and will be ready shortly."
     });
     
-    // Simulate API delay
     setTimeout(() => {
       setIsGenerating(false);
       toast.success("Report generated successfully");
@@ -141,6 +179,38 @@ const Reports: React.FC = () => {
       // In a real app, this would redirect to the new report or refresh the list
       // For now, we'll just close the dialog
     }, 2000);
+  };
+  
+  const handleDownloadReport = (report: Report) => {
+    if (!report.scanData) {
+      toast.error("Report data is not available yet");
+      return;
+    }
+    
+    if (report.status === 'generating') {
+      toast.info("This report is still being generated");
+      return;
+    }
+    
+    toast.success(`Downloading ${report.name}`, {
+      description: "Your report will be downloaded shortly.",
+    });
+    
+    setTimeout(() => {
+      try {
+        downloadReport(report.scanData, report.type === 'vuln' ? 'pdf' : 'csv');
+        toast.success("Report downloaded successfully");
+      } catch (error) {
+        console.error("Error downloading report:", error);
+        toast.error("Failed to download report");
+      }
+    }, 1000);
+  };
+  
+  const handleViewReport = (report: Report) => {
+    toast.info(`Viewing ${report.name}`, {
+      description: "This feature will be available soon.",
+    });
   };
   
   return (
@@ -399,7 +469,12 @@ const Reports: React.FC = () => {
                   <TableCell>{report.size}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleViewReport(report)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button 
@@ -407,6 +482,7 @@ const Reports: React.FC = () => {
                         size="sm" 
                         className="h-8 w-8 p-0"
                         disabled={report.status === 'generating'}
+                        onClick={() => handleDownloadReport(report)}
                       >
                         <Download className="h-4 w-4" />
                       </Button>

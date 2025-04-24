@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,23 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Settings: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
+  const [isDarkMode, setIsDarkMode] = useState(theme === 'dark');
+  
+  useEffect(() => {
+    setIsDarkMode(theme === 'dark');
+  }, [theme]);
+
   const saveSettings = () => {
     toast.success("Settings saved successfully");
+  };
+  
+  const handleDarkModeToggle = (checked: boolean) => {
+    setIsDarkMode(checked);
+    toggleTheme();
   };
   
   return (
@@ -55,7 +68,11 @@ const Settings: React.FC = () => {
                     <Label htmlFor="dark-mode">Dark Mode</Label>
                     <p className="text-sm text-muted-foreground">Use dark theme for the interface</p>
                   </div>
-                  <Switch id="dark-mode" defaultChecked />
+                  <Switch 
+                    id="dark-mode" 
+                    checked={isDarkMode}
+                    onCheckedChange={handleDarkModeToggle}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">

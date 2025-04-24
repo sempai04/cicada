@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,7 +20,6 @@ const Console: React.FC = () => {
   const commandHistoryRef = useRef<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   
-  // Focus the input when the component mounts
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
@@ -57,13 +55,11 @@ const Console: React.FC = () => {
   };
 
   const executeCommand = (cmd: string) => {
-    // Save command to history stack for up/down arrow navigation
     if (cmd.trim() && (commandHistoryRef.current.length === 0 || commandHistoryRef.current[0] !== cmd)) {
       commandHistoryRef.current = [cmd, ...commandHistoryRef.current];
     }
     setHistoryIndex(-1);
     
-    // Simple command processing logic
     const cmdLower = cmd.toLowerCase().trim();
     const cmdParts = cmdLower.split(' ');
     const baseCmd = cmdParts[0];
@@ -121,10 +117,7 @@ const Console: React.FC = () => {
           'Exiting console mode...',
           'Notice: In web interface mode, console session remains active.'
         ]);
-        toast({
-          title: 'Console Exit',
-          description: 'Cannot fully exit in web interface mode.',
-        });
+        toast.info('Cannot fully exit in web interface mode.');
         break;
         
       case 'scan':
@@ -132,7 +125,6 @@ const Console: React.FC = () => {
           const target = cmdParts[1];
           let options = '';
           
-          // Parse options if present
           if (cmdParts.length > 2) {
             options = cmdParts.slice(2).join(' ');
           }
@@ -143,7 +135,6 @@ const Console: React.FC = () => {
             'Scanning...',
           ]);
           
-          // Simulate async scan with a slight delay
           setTimeout(() => {
             setHistory(prev => [
               ...prev,
@@ -185,7 +176,6 @@ const Console: React.FC = () => {
   };
   
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Navigate through command history
     if (e.key === 'ArrowUp') {
       e.preventDefault();
       const newIndex = Math.min(historyIndex + 1, commandHistoryRef.current.length - 1);

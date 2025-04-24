@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, FilePdf } from 'lucide-react';
+import { Download, File } from 'lucide-react'; // Changed FilePdf to File
 import { toast } from 'sonner';
 import { ScanDetail } from '@/types/scan';
 import { downloadReport } from '@/lib/reports';
@@ -53,7 +53,7 @@ const ScanReportActions: React.FC<ScanReportActionsProps> = ({ scan }) => {
         className="bg-cyber hover:bg-cyber-accent text-black"
         onClick={handleDownloadPDF}
       >
-        <FilePdf className="mr-2 h-4 w-4" />
+        <File className="mr-2 h-4 w-4" /> {/* Changed FilePdf to File */}
         PDF Report
       </Button>
     </div>
